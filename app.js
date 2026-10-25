@@ -3,8 +3,67 @@ const notice = document.querySelector("#notice");
 const userCount = document.querySelector("#user-count");
 const refreshButton = document.querySelector("#refresh-button");
 const connectionStatus = document.querySelector("#connection-status");
+const authPanel = document.querySelector("#auth-panel");
+const dataPanel = document.querySelector("#data-panel");
+const authMessage = document.querySelector("#auth-message");
+const accountName = document.querySelector("#account-name");
+const loginLink = document.querySelector("#login-link");
+const logoutLink = document.querySelector("#logout-link");
+const authRetry = document.querySelector("#auth-retry");
 let users = [];
 let editingId = null;
+let canAccessData = false;
+
+function clearProtectedData() {
+  canAccessData = false;
+  users = [];
+  editingId = null;
+  usersBody.replaceChildren();
+  userCount.textContent = "—";
+  clearNotice();
+  dataPanel.hidden = true;
+  authPanel.hidden = false;
+}
+
+async function checkSession() {
+  clearProtectedData();
+  authRetry.disabled = true;
+  authMessage.textContent = "Đang kiểm tra phiên đăng nhập...";
+  try {
+    const response = await fetch("/.auth/me", { cache: "no-store" });
+    if (!response.ok) throw new Error(`Không kiểm tra được phiên đăng nhập (HTTP ${response.status}).`);
+    const { clientPrincipal } = await response.json();
+    const signedIn = Boolean(clientPrincipal);
+    accountName.textContent = clientPrincipal?.userDetails || "";
+    loginLink.hidden = signedIn;
+    logoutLink.hidden = !signedIn;
+    if (!signedIn) {
+      authMessage.textContent = "Vui lòng đăng nhập Microsoft bằng tài khoản đã được quản trị viên mời.";
+      return;
+    }
+    if (clientPrincipal.identityProvider !== "aad" ||
+        !clientPrincipal.userRoles?.includes("members")) {
+      authMessage.textContent = "Tài khoản chưa có quyền truy cập. Hãy nhờ quản trị viên mời tài khoản Microsoft này vào role members, mở liên kết mời và đăng nhập lại.";
+      return;
+    }
+    canAccessData = true;
+    authPanel.hidden = true;
+    dataPanel.hidden = false;
+    await loadUsers();
+  } catch (error) {
+    authMessage.textContent = error.message || "Không kiểm tra được đăng nhập. Vui lòng thử lại.";
+  } finally {
+    authRetry.disabled = false;
+  }
+}
+
+function handleAccessDenied(response) {
+  if (response.status !== 401 && response.status !== 403) return false;
+  clearProtectedData();
+  authMessage.textContent = "Phiên đăng nhập đã hết hạn hoặc tài khoản không có quyền members. Hãy đăng nhập lại hoặc liên hệ quản trị viên.";
+  loginLink.hidden = false;
+  return true;
+}
 
 function setConnectionStatus(connected) {
   connectionStatus.className = connected ? "connection" : "connection error";
@@ -94,11 +153,13 @@ function makeButton(label, className, onClick) {
 }
 
 async function loadUsers() {
+  if (!canAccessData) return;
   clearNotice();
   refreshButton.disabled = true;
   usersBody.innerHTML = '<tr><td class="table-state" colspan="4">Đang tải dữ liệu...</td></tr>';
   try {
     const response = await fetch("/api/users");
+    if (handleAccessDenied(response)) return;
     if (!response.ok) throw new Error(await getErrorMessage(response));
     const data = await response.json();
     if (!Array.isArray(data)) throw new Error("API trả về dữ liệu không hợp lệ.");
@@ -118,6 +179,7 @@ async function loadUsers() {
 }
 
 async function saveUser(id) {
+  if (!canAccessData) return;
   const row = [...usersBody.rows].find((item) => Number(item.cells[0].textContent) === id);
   const name = row?.querySelector('input[name="name"]')?.value.trim();
   const email = row?.querySelector('input[name="email"]')?.value.trim();
@@ -135,6 +197,7 @@ async function saveUser(id) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, email })
     });
+    if (handleAccessDenied(response)) return;
     if (!response.ok) throw new Error(await getErrorMessage(response));
     const updatedUser = await response.json();
     users = users.map((user) => user.id === id ? updatedUser : user);
@@ -157,4 +220,5 @@ async function getErrorMessage(response) {
 }
 
 refreshButton.addEventListener("click", loadUsers);
-loadUsers();
+authRetry.addEventListener("click", checkSession);
+checkSession();

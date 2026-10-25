@@ -12,6 +12,14 @@
 }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+.account-actions { display: flex; align-items: center; gap: 12px; font-size: 12px; }
+.account-actions a { text-decoration: none; }
+#account-name { max-width: 180px; overflow-wrap: anywhere; }
+.auth-panel { padding: 25px; }
+.auth-panel h2 { font-size: 18px; }
+.auth-panel p { color: #68758d; line-height: 1.6; }
 
 body {
   min-width: 320px;

@@ -15,9 +15,11 @@
           <span class="brand-mark" aria-hidden="true">U</span>
           <span>People<span class="brand-accent">Desk</span></span>
         </a>
-        <span class="connection connecting" id="connection-status">
-          <span class="status-dot"></span><span>Đang kết nối</span>
-        </span>
+        <div class="account-actions">
+          <span id="account-name"></span>
+          <a class="refresh-button" id="login-link" href="/.auth/login/aad">Đăng nhập Microsoft</a>
+          <a class="refresh-button" id="logout-link" href="/.auth/logout" hidden>Đăng xuất</a>
+        </div>
       </header>
 
       <section class="intro">
@@ -26,7 +28,13 @@
         <p class="subtitle">Quản lý thông tin người dùng được lưu trong Azure SQL.</p>
       </section>
 
-      <section class="panel" aria-labelledby="users-heading">
+      <section class="panel auth-panel" id="auth-panel" aria-live="polite">
+        <h2>Đăng nhập bằng Microsoft Entra ID</h2>
+        <p id="auth-message">Đang kiểm tra phiên đăng nhập...</p>
+        <button class="refresh-button" id="auth-retry" type="button">Kiểm tra lại quyền truy cập</button>
+      </section>
+
+      <section class="panel" id="data-panel" aria-labelledby="users-heading" hidden>
         <div class="panel-heading">
           <div>
             <h2 id="users-heading">Danh sách người dùng</h2>
@@ -55,8 +63,10 @@
           </table>
         </div>
         <footer class="panel-footer">
-          <span class="footer-dot" aria-hidden="true"></span>
-          Dữ liệu được tải trực tiếp từ cơ sở dữ liệu
+          <span class="connection connecting" id="connection-status">
+            <span class="status-dot"></span><span>Đang kết nối</span>
+          </span>
+          Dữ liệu từ Azure SQL
         </footer>
       </section>
       <p class="page-footnote">PeopleDesk <span aria-hidden="true">·</span> Azure Static Web Apps</p>

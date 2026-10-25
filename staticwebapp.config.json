@@ -5,8 +5,12 @@
   },
   "routes": [
     {
+      "route": "/.auth/login/github",
+      "statusCode": 404
+    },
+    {
       "route": "/api/*",
-      "allowedRoles": ["anonymous"]
+      "allowedRoles": ["members"]
     }
   ],
   "platform": {
