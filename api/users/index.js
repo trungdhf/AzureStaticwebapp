@@ -4,7 +4,9 @@ let poolPromise;
 
 function getPool() {
   if (!process.env.SQL_CONNECTION_STRING) {
-    throw new Error("Thiếu cấu hình SQL_CONNECTION_STRING.");
+    const error = new Error("SQL_CONNECTION_STRING is not configured.");
+    error.code = "SQL_CONFIG_MISSING";
+    throw error;
   }
   if (!poolPromise) {
     poolPromise = sql.connect(process.env.SQL_CONNECTION_STRING).catch((error) => {
@@ -20,6 +22,51 @@ function response(status, body) {
     status,
     headers: { "Content-Type": "application/json; charset=utf-8" },
     body: JSON.stringify(body)
+  };
+}
+
+function getSafeError(error) {
+  if (error.code === "SQL_CONFIG_MISSING") {
+    return {
+      code: "SQL_CONFIG_MISSING",
+      message: "Chưa cấu hình biến môi trường SQL_CONNECTION_STRING cho API."
+    };
+  }
+
+  const sqlNumber = error.number || error.originalError?.info?.number;
+  if (error.code === "ELOGIN" || sqlNumber === 18456) {
+    return {
+      code: "SQL_LOGIN_FAILED",
+      message: "Azure SQL từ chối đăng nhập. Hãy kiểm tra kiểu xác thực, tài khoản và quyền truy cập."
+    };
+  }
+  if (sqlNumber === 208) {
+    return {
+      code: "SQL_OBJECT_NOT_FOUND",
+      message: "Không tìm thấy bảng dbo.Users. Hãy xác nhận bảng nằm trong database được cấu hình."
+    };
+  }
+  if (sqlNumber === 4060) {
+    return {
+      code: "SQL_DATABASE_UNAVAILABLE",
+      message: "Không mở được database. Hãy kiểm tra tên database và quyền của tài khoản."
+    };
+  }
+  if (["ETIMEOUT", "ESOCKET", "ENOTFOUND", "ECONNRESET"].includes(error.code)) {
+    return {
+      code: "SQL_NETWORK_ERROR",
+      message: "Không kết nối được Azure SQL. Hãy kiểm tra server, cổng 1433 và firewall/network rules."
+    };
+  }
+  if (error.code === "EREQUEST") {
+    return {
+      code: "SQL_REQUEST_FAILED",
+      message: "Azure SQL từ chối truy vấn. Hãy kiểm tra database, bảng dbo.Users và quyền truy cập."
+    };
+  }
+  return {
+    code: "SQL_REQUEST_FAILED",
+    message: "Yêu cầu tới Azure SQL thất bại. Xem log API/Application Insights để biết chi tiết."
   };
 }
 
@@ -73,6 +120,10 @@ module.exports = async function (context, req) {
     context.res = response(404, { error: "Không tìm thấy endpoint." });
   } catch (error) {
     context.log.error("Azure SQL request failed:", error);
-    context.res = response(500, { error: "Không thể xử lý yêu cầu. Vui lòng kiểm tra cấu hình dịch vụ." });
+    const safeError = getSafeError(error);
+    context.res = response(500, {
+      error: safeError.message,
+      code: safeError.code
+    });
   }
 };

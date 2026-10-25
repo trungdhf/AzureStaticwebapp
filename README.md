@@ -45,3 +45,5 @@ API dùng câu lệnh SQL có tham số cho thao tác cập nhật. Hãy cấp c
 
 - `GET /api/users` — lấy danh sách.
 - `PUT /api/users/{id}` — cập nhật `{ "name": "...", "email": "..." }`.
+
+Khi API gặp lỗi SQL, response có mã chẩn đoán an toàn như `SQL_CONFIG_MISSING`, `SQL_LOGIN_FAILED`, `SQL_OBJECT_NOT_FOUND` hoặc `SQL_NETWORK_ERROR`. API không bao giờ trả connection string, username hay password; xem log API/Application Insights để điều tra lỗi khác.
