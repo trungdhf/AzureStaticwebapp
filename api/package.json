@@ -1,0 +1,9 @@
+{
+  "name": "peopledesk-api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Azure Functions API for the PeopleDesk Azure Static Web Apps sample",
+  "dependencies": {
+    "mssql": "^11.0.1"
+  }
+}

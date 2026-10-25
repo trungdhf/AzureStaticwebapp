@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f4f7fb" />
+    <title>Quản lý người dùng</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <main class="page">
+      <header class="topbar">
+        <a class="brand" href="/" aria-label="Trang chủ">
+          <span class="brand-mark" aria-hidden="true">U</span>
+          <span>People<span class="brand-accent">Desk</span></span>
+        </a>
+        <span class="connection connecting" id="connection-status">
+          <span class="status-dot"></span><span>Đang kết nối</span>
+        </span>
+      </header>
+
+      <section class="intro">
+        <p class="eyebrow">KHÔNG GIAN LÀM VIỆC</p>
+        <h1>Người dùng</h1>
+        <p class="subtitle">Quản lý thông tin người dùng được lưu trong Azure SQL.</p>
+      </section>
+
+      <section class="panel" aria-labelledby="users-heading">
+        <div class="panel-heading">
+          <div>
+            <h2 id="users-heading">Danh sách người dùng</h2>
+            <p class="panel-caption"><span id="user-count">—</span> hồ sơ</p>
+          </div>
+          <button class="refresh-button" id="refresh-button" type="button">
+            <span aria-hidden="true">↻</span> Tải lại
+          </button>
+        </div>
+
+        <div class="notice" id="notice" role="status" aria-live="polite" hidden></div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">ID</th>
+                <th scope="col">Tên</th>
+                <th scope="col">Email</th>
+                <th scope="col" class="action-heading">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody id="users-body">
+              <tr><td class="table-state" colspan="4">Đang tải dữ liệu...</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <footer class="panel-footer">
+          <span class="footer-dot" aria-hidden="true"></span>
+          Dữ liệu được tải trực tiếp từ cơ sở dữ liệu
+        </footer>
+      </section>
+      <p class="page-footnote">PeopleDesk <span aria-hidden="true">·</span> Azure Static Web Apps</p>
+    </main>
+  </body>
+</html>
